@@ -10,10 +10,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.zxing.Result;
 
 import net.kenevans.util.GETResourceFromURL;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -69,14 +72,20 @@ public class SimpleScannerActivity extends AppCompatActivity implements ZXingSca
         // mScannerView.resumeCameraPreview(this);
         try {
             URL url = new URL(radarbaseUrl);
-            new GETResourceFromURL().execute(url);
+            new GETResourceFromURL(this).execute(url);
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
     }
 
     public void parseJSONFromAsyncTask(JSONObject jsonObject) {
-        String TAG = "scanner";
-        Log.d(TAG,jsonObject.toString());
+        try {
+                String refreshToken = jsonObject.getString("refreshToken");
+                DecodedJWT decodedJWT = JWT.decode(refreshToken);
+                String subject = decodedJWT.getSubject();
+                Log.d("Subject", subject);
+        } catch (JSONException e) {
+            Toast.makeText(this, "JSON is not a valid string", Toast.LENGTH_SHORT).show();
+        }
     }
 }

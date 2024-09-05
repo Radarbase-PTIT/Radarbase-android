@@ -1,5 +1,6 @@
 package net.kenevans.util;
 
+import android.annotation.SuppressLint;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
@@ -14,7 +15,12 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class GETResourceFromURL extends AsyncTask<URL, Integer, JSONObject> {
+    @SuppressLint("StaticFieldLeak")
     private SimpleScannerActivity simpleScannerActivity;
+
+    public GETResourceFromURL(SimpleScannerActivity simpleScannerActivity) {
+        this.simpleScannerActivity = simpleScannerActivity;
+    }
 
     protected JSONObject doInBackground(URL... urls) {
         HttpURLConnection urlConnection = null;
@@ -49,12 +55,12 @@ public class GETResourceFromURL extends AsyncTask<URL, Integer, JSONObject> {
                 }
 
                 else {
-                    Toast.makeText(new SimpleScannerActivity(), "QR Code expired", Toast.LENGTH_SHORT).show();
+                    jsonObject = null;
                 }
             }
 
         } catch (Exception e) {
-            Toast.makeText(new SimpleScannerActivity(), "Could not connect to host", Toast.LENGTH_SHORT).show();
+            jsonObject = null;
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
@@ -66,7 +72,12 @@ public class GETResourceFromURL extends AsyncTask<URL, Integer, JSONObject> {
 
     @Override
     protected void onPostExecute(JSONObject result) {
-       this.simpleScannerActivity = new SimpleScannerActivity();
-       this.simpleScannerActivity.parseJSONFromAsyncTask(result);
+        super.onPostExecute(result);
+        if (simpleScannerActivity != null) {
+            simpleScannerActivity = new SimpleScannerActivity();
+            simpleScannerActivity.parseJSONFromAsyncTask(result);
+        } else {
+            Toast.makeText(simpleScannerActivity, "QRCode expired or QR Code error", Toast.LENGTH_SHORT).show();
+        }
     }
 }
