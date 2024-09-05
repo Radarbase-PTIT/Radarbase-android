@@ -448,7 +448,8 @@ public class ECGActivity extends AppCompatActivity
             }
             return true;
         } else if (id == R.id.scan_qr) {
-
+            scanQRCode();
+            return true;
         }
         else if (id == R.id.save_plot) {
             saveDataWithNote(SaveType.PLOT);
@@ -491,6 +492,11 @@ public class ECGActivity extends AppCompatActivity
             return true;
         }
         return false;
+    }
+
+    private void scanQRCode() {
+        Intent intent = new Intent(this, SimpleScannerActivity.class);
+        startActivity(intent);
     }
 
     /**

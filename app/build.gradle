@@ -39,6 +39,9 @@ dependencies {
 
     // From SDK
     implementation files('libs/polar-ble-sdk.aar')
+
+    //Bar code scanner
+    implementation 'me.dm7.barcodescanner:zxing:1.9'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'io.reactivex.rxjava3:rxjava:3.1.6'
     implementation 'io.reactivex.rxjava3:rxandroid:3.0.2'
