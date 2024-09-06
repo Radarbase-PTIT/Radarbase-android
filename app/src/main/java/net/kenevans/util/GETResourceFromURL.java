@@ -1,10 +1,12 @@
 package net.kenevans.util;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 
+import net.kenevans.polar.polarecg.ECGActivity;
 import net.kenevans.polar.polarecg.SimpleScannerActivity;
 
 import org.json.JSONException;
@@ -25,12 +27,11 @@ public class GETResourceFromURL extends AsyncTask<URL, Integer, JSONObject> {
     protected JSONObject doInBackground(URL... urls) {
         HttpURLConnection urlConnection = null;
         StringBuilder response = new StringBuilder();
-        JSONObject jsonObject = null;
+        JSONObject jsonObject = new JSONObject();
 
         try {
             for (int i = 0; i < urls.length; i++) {
                 URL url = urls[i];
-                Log.d("Scan", url.toString());
                 // Open connection
                 urlConnection = (HttpURLConnection) url.openConnection();
 
@@ -53,14 +54,10 @@ public class GETResourceFromURL extends AsyncTask<URL, Integer, JSONObject> {
                     in.close();
                     jsonObject = new JSONObject(response.toString());
                 }
-
-                else {
-                    jsonObject = null;
-                }
             }
 
         } catch (Exception e) {
-            jsonObject = null;
+            Log.e("Scan error", e.getMessage());
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
@@ -73,11 +70,6 @@ public class GETResourceFromURL extends AsyncTask<URL, Integer, JSONObject> {
     @Override
     protected void onPostExecute(JSONObject result) {
         super.onPostExecute(result);
-        if (simpleScannerActivity != null) {
-            simpleScannerActivity = new SimpleScannerActivity();
-            simpleScannerActivity.parseJSONFromAsyncTask(result);
-        } else {
-            Toast.makeText(simpleScannerActivity, "QRCode expired or QR Code error", Toast.LENGTH_SHORT).show();
-        }
+        simpleScannerActivity.parseJSONFromAsyncTask(null);
     }
 }

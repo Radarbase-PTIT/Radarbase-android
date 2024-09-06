@@ -1,28 +1,24 @@
 package net.kenevans.polar.polarecg;
 
 import android.Manifest;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
+import androidx.preference.PreferenceManager;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.zxing.Result;
-
 import net.kenevans.util.GETResourceFromURL;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -80,12 +76,34 @@ public class SimpleScannerActivity extends AppCompatActivity implements ZXingSca
 
     public void parseJSONFromAsyncTask(JSONObject jsonObject) {
         try {
+            if (jsonObject != null) {
                 String refreshToken = jsonObject.getString("refreshToken");
                 DecodedJWT decodedJWT = JWT.decode(refreshToken);
                 String subject = decodedJWT.getSubject();
-                Log.d("Subject", subject);
+                //Change settings
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("patientName", subject);
+                editor.apply();
+                Toast.makeText(this, "Patient name recorded", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, "QRCode expired", Toast.LENGTH_LONG).show();
+            }
         } catch (JSONException e) {
             Toast.makeText(this, "JSON is not a valid string", Toast.LENGTH_SHORT).show();
+        } finally {
+            delaySwitchTOECGActivityIntent(this);
         }
+    }
+
+    private void delaySwitchTOECGActivityIntent(Context ctx) {
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // Start the new Intent to navigate to SecondActivity after the delay
+                Intent intent = new Intent(ctx, ECGActivity.class);
+                startActivity(intent);
+            }
+        }, 1000); // 2s
     }
 }
