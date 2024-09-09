@@ -70,6 +70,6 @@ public class GETResourceFromURL extends AsyncTask<URL, Integer, JSONObject> {
     @Override
     protected void onPostExecute(JSONObject result) {
         super.onPostExecute(result);
-        simpleScannerActivity.parseJSONFromAsyncTask(null);
+        simpleScannerActivity.parseJSONFromAsyncTask(result);
     }
 }

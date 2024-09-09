@@ -86,11 +86,9 @@ public class SimpleScannerActivity extends AppCompatActivity implements ZXingSca
                 editor.putString("patientName", subject);
                 editor.apply();
                 Toast.makeText(this, "Patient name recorded", Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(this, "QRCode expired", Toast.LENGTH_LONG).show();
             }
         } catch (JSONException e) {
-            Toast.makeText(this, "JSON is not a valid string", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "QRCode expired", Toast.LENGTH_LONG).show();
         } finally {
             delaySwitchTOECGActivityIntent(this);
         }
@@ -104,6 +102,6 @@ public class SimpleScannerActivity extends AppCompatActivity implements ZXingSca
                 Intent intent = new Intent(ctx, ECGActivity.class);
                 startActivity(intent);
             }
-        }, 1000); // 2s
+        }, 1000); // 1s
     }
 }
