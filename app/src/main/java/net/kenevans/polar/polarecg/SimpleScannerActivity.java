@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -16,11 +17,16 @@ import androidx.preference.PreferenceManager;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.zxing.Result;
+
+import net.kenevans.apiservice.GetRefreshToken;
 import net.kenevans.util.GETResourceFromURL;
+import net.kenevans.util.POSTResourceToURL;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
@@ -63,35 +69,50 @@ public class SimpleScannerActivity extends AppCompatActivity implements ZXingSca
     public void handleResult(Result rawResult) {
         // Do something with the result here
         String radarbaseUrl = rawResult.getText();
+        String[] urlFragments = radarbaseUrl.split("/");
+        String tokenName = urlFragments[urlFragments.length - 1];
+        GetRefreshToken.run(tokenName);
+    }
 
-        // If you would like to resume scanning, call this method below:
-        // mScannerView.resumeCameraPreview(this);
+    /**
+     * Parse JSON to get patient name detail
+     * @param jsonObject
+     */
+//    public void parseJSONFromAsyncTask(JSONObject jsonObject) {
+//        try {
+//            if (jsonObject != null) {
+//                String refreshToken = jsonObject.getString("refreshToken");
+//
+//            }
+//        } catch (JSONException e) {
+//            Toast.makeText(this, "QRCode expired", Toast.LENGTH_LONG).show();
+//        } finally {
+//            delaySwitchTOECGActivityIntent(this);
+//        }
+//    }
+
+    /**
+     * Get access token after scanning QR Code
+     * @param ctx
+     */
+    public void postAccessToken(JSONObject jsonObject) {
         try {
-            URL url = new URL(radarbaseUrl);
-            new GETResourceFromURL(this).execute(url);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
+            if (jsonObject != null) {
+                String accessToken = jsonObject.getString("accessToken");
+                Log.d("Access token", accessToken);
+            }
+        } catch (JSONException e) {
+
         }
     }
 
-    public void parseJSONFromAsyncTask(JSONObject jsonObject) {
-        try {
-            if (jsonObject != null) {
-                String refreshToken = jsonObject.getString("refreshToken");
-                DecodedJWT decodedJWT = JWT.decode(refreshToken);
-                String subject = decodedJWT.getSubject();
-                //Change settings
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString("patientName", subject);
-                editor.apply();
-                Toast.makeText(this, "Patient name recorded", Toast.LENGTH_LONG).show();
-            }
-        } catch (JSONException e) {
-            Toast.makeText(this, "QRCode expired", Toast.LENGTH_LONG).show();
-        } finally {
-            delaySwitchTOECGActivityIntent(this);
-        }
+    public void updatePreference(String key, String value) {
+        //Change settings
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(key, value);
+        editor.apply();
+//        Toast.makeText(this, "Patient name recorded", Toast.LENGTH_LONG).show();
     }
 
     private void delaySwitchTOECGActivityIntent(Context ctx) {

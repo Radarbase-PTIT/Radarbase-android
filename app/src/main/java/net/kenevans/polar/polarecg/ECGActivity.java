@@ -231,7 +231,6 @@ public class ECGActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        Log.d(TAG, this.getClass().getSimpleName() + " onCreate");
         super.onCreate(savedInstanceState);
         // Capture global exceptions
         Thread.setDefaultUncaughtExceptionHandler((paramThread,
@@ -1191,7 +1190,6 @@ public class ECGActivity extends AppCompatActivity
             // resets its time to 01:01:2019 00:00:00 when connected to strap
             TimeZone timeZone = TimeZone.getTimeZone("UTC");
             Calendar calNow = Calendar.getInstance(timeZone);
-            Log.d(TAG, "setLocalTime to " + calNow.getTime());
             mApi.setLocalTime(mDeviceId, calNow);
             mEcgDisposable =
                     mApi.setLocalTime(mDeviceId, calNow)
@@ -1210,12 +1208,16 @@ public class ECGActivity extends AppCompatActivity
                                         if (mQRS == null) {
                                             mQRS = new QRSDetection(ECGActivity.this);
                                         }
-//                                        logEcgDataInfo(polarEcgData);
+
+                                        logEcgDataInfo(polarEcgData);
                                         mQRS.process(polarEcgData);
+                                        String hR = mTextViewHR.getText().toString();
                                         // Update the elapsed time
                                         double elapsed =
                                                 mECGPlotter.getDataIndex() / 130.;
                                         mTextViewTime.setText(getString(R.string.elapsed_time, elapsed));
+
+                                        //Send all data to kafka
                                     },
                                     throwable -> {
                                         Log.e(TAG,
@@ -1562,7 +1564,7 @@ public class ECGActivity extends AppCompatActivity
         if (mApi != null || mDeviceId == null || mDeviceId.isEmpty()) {
             return;
         }
-        if (mEcgDisposable != null) {
+        if (mEcgDisposable != null && mPlaying) {
             // Turns it off
             streamECG();
         }
@@ -1644,15 +1646,17 @@ public class ECGActivity extends AppCompatActivity
                 mConnected = false;
             }
 
-            @Override
+
+
+//            @Override
             public void streamingFeaturesReady(@NonNull final String identifier,
                                                @NonNull final Set<PolarBleApi.DeviceStreamingFeature> features) {
                 for (PolarBleApi.DeviceStreamingFeature feature : features) {
                     Log.d(TAG, "Streaming feature is ready for 1: " + feature);
                     switch (feature) {
                         case ECG:
-                            streamECG();
-                            break;
+//                            streamECG();
+//                            break;
                         case PPI:
                         case ACC:
                         case MAGNETOMETER:
@@ -1692,9 +1696,7 @@ public class ECGActivity extends AppCompatActivity
             public void hrNotificationReceived(@NonNull String s,
                                                @NonNull PolarHrData polarHrData) {
                 if (mPlaying) {
-//                    Log.d(TAG,
-//                            "*HR " + polarHrData.hr + " mPlaying=" +
-//                            mPlaying);
+                    Log.d("HRRRRR", "*HR " + polarHrData.hr + " mPlaying=" + mPlaying);
                     mTextViewHR.setText(String.valueOf(polarHrData.hr));
                     // Add to HR plot
                     long time = new Date().getTime();
@@ -1706,7 +1708,7 @@ public class ECGActivity extends AppCompatActivity
         });
         try {
             mApi.connectToDevice(mDeviceId);
-            mPlaying = true;
+            //mPlaying = true;
             setLastHr();
             mStopTime = new Date();
         } catch (PolarInvalidArgument ex) {

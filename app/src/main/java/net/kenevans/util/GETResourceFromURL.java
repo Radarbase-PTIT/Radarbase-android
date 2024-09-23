@@ -1,12 +1,8 @@
 package net.kenevans.util;
 
 import android.annotation.SuppressLint;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.widget.Toast;
-
-import net.kenevans.polar.polarecg.ECGActivity;
 import net.kenevans.polar.polarecg.SimpleScannerActivity;
 
 import org.json.JSONException;
@@ -15,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
 
 public class GETResourceFromURL extends AsyncTask<URL, Integer, JSONObject> {
     @SuppressLint("StaticFieldLeak")
@@ -41,7 +38,6 @@ public class GETResourceFromURL extends AsyncTask<URL, Integer, JSONObject> {
 //
 //                // Get response code
                 int responseCode = urlConnection.getResponseCode();
-                Log.d("Scan", "Response code" +responseCode);
 //
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     // Read response
@@ -67,9 +63,29 @@ public class GETResourceFromURL extends AsyncTask<URL, Integer, JSONObject> {
         return jsonObject;
     }
 
+
     @Override
     protected void onPostExecute(JSONObject result) {
         super.onPostExecute(result);
-        simpleScannerActivity.parseJSONFromAsyncTask(result);
+        //get access Token
+
+        HashMap<String, String> url = new HashMap<>();
+        String getAccessTokenUrl = "http://192.168.1.109/managementportal/oauth/token";
+        url.put("url", getAccessTokenUrl);
+        try {
+            //Get data
+            HashMap<String, String> data = new HashMap<>();
+            data.put("grant_type", "refresh_token");
+            data.put("client_id", "pRMT");
+            if (result.has("refreshToken")) {
+                String refreshToken = result.getString("refreshToken");
+                data.put("refresh_token", refreshToken);
+            }
+            data.put("client_secret", "saturday$SHARE$scale");
+
+            new POSTResourceToURL(this.simpleScannerActivity).execute(url,data);
+        } catch (Exception e) {
+
+        }
     }
 }
