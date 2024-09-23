@@ -2,8 +2,6 @@ package net.kenevans.baseapi.definitions;
 
 import net.kenevans.baseapi.dto.Auth;
 
-import java.net.URL;
-
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;

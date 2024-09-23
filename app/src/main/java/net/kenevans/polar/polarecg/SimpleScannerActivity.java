@@ -19,14 +19,9 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.zxing.Result;
 
 import net.kenevans.apiservice.GetRefreshToken;
-import net.kenevans.util.GETResourceFromURL;
-import net.kenevans.util.POSTResourceToURL;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.HashMap;
 
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
@@ -71,58 +66,6 @@ public class SimpleScannerActivity extends AppCompatActivity implements ZXingSca
         String radarbaseUrl = rawResult.getText();
         String[] urlFragments = radarbaseUrl.split("/");
         String tokenName = urlFragments[urlFragments.length - 1];
-        GetRefreshToken.run(tokenName);
-    }
-
-    /**
-     * Parse JSON to get patient name detail
-     * @param jsonObject
-     */
-//    public void parseJSONFromAsyncTask(JSONObject jsonObject) {
-//        try {
-//            if (jsonObject != null) {
-//                String refreshToken = jsonObject.getString("refreshToken");
-//
-//            }
-//        } catch (JSONException e) {
-//            Toast.makeText(this, "QRCode expired", Toast.LENGTH_LONG).show();
-//        } finally {
-//            delaySwitchTOECGActivityIntent(this);
-//        }
-//    }
-
-    /**
-     * Get access token after scanning QR Code
-     * @param ctx
-     */
-    public void postAccessToken(JSONObject jsonObject) {
-        try {
-            if (jsonObject != null) {
-                String accessToken = jsonObject.getString("accessToken");
-                Log.d("Access token", accessToken);
-            }
-        } catch (JSONException e) {
-
-        }
-    }
-
-    public void updatePreference(String key, String value) {
-        //Change settings
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(key, value);
-        editor.apply();
-//        Toast.makeText(this, "Patient name recorded", Toast.LENGTH_LONG).show();
-    }
-
-    private void delaySwitchTOECGActivityIntent(Context ctx) {
-        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                // Start the new Intent to navigate to SecondActivity after the delay
-                Intent intent = new Intent(ctx, ECGActivity.class);
-                startActivity(intent);
-            }
-        }, 1000); // 1s
+        GetRefreshToken.run(this, tokenName);
     }
 }
