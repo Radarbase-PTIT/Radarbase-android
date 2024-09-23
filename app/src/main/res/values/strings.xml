@@ -50,6 +50,10 @@
     <string name="settings_title">Settings</string>
     <string name="device_id_title">Device ID</string>
     <string name="device_id_summary">Polar device ID or MAC address</string>
+    <string name="project_id">Project ID</string>
+    <string name="project_id_summary">Project ID of patient</string>
+    <string name="source_id">Source ID</string>
+    <string name="source_id_summary">Source ID assigned to patient</string>
     <string name="patient_name_title">Patient Name</string>
     <string name="patient_name_summary">Patient name for ECG image file</string>
     <string name="qrs_visibility_title">QRS Visibility</string>

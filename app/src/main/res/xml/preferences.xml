@@ -9,9 +9,20 @@
             app:useSimpleSummaryProvider="true" />
         <EditTextPreference
             app:defaultValue=""
+            app:key="projectID"
+            app:title="@string/project_id"
+            app:useSimpleSummaryProvider="true"
+            />
+        <EditTextPreference
+            app:defaultValue=""
+            app:key="sourceID"
+            app:title="@string/source_id"
+            app:useSimpleSummaryProvider="true"
+            />
+        <EditTextPreference
+            app:defaultValue=""
             app:key="patientName"
             app:title="@string/patient_name_title"
-            app:dialogMessage="@string/patient_name_summary"
             app:useSimpleSummaryProvider="true" />
         <SwitchPreferenceCompat
             app:defaultValue="true"

@@ -29,7 +29,7 @@ public class GetRefreshToken {
                     if (response.body() != null) {
                         String refreshToken = response.body().getRefreshToken();
                         //Call to get access token
-                        GetAccessToken.run(refreshToken);
+                        GetAccessToken.run(ctx, refreshToken);
                     }
                 }
 

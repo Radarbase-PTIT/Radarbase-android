@@ -15,6 +15,8 @@ public class AccessTokenOutput {
         return access_token;
     }
 
+    public String getRefresh_token() { return refresh_token; }
+
     public String getExpires_in() {
         return expires_in;
     }
