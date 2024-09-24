@@ -25,12 +25,10 @@ public class GetRefreshToken {
         instance.getApiService().getRefreshTokenFromUrl(tokenName).enqueue(new Callback<Auth>() {
             @Override
             public void onResponse(@NonNull Call<Auth> call, @NonNull Response<Auth> response) {
-                if (response.isSuccessful()) {
-                    if (response.body() != null) {
-                        String refreshToken = response.body().getRefreshToken();
-                        //Call to get access token
-                        GetAccessToken.run(ctx, refreshToken);
-                    }
+                if (response.isSuccessful() && response.body() != null) {
+                    String refreshToken = response.body().getRefreshToken();
+                    //Call to get access token
+                    GetAccessToken.run(ctx, refreshToken);
                 }
 
                 //QR code is used

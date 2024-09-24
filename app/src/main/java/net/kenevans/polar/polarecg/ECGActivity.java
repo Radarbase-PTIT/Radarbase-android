@@ -69,6 +69,11 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.preference.PreferenceManager;
+
+import net.kenevans.apiservice.SendDataToKafKa;
+import net.kenevans.apiservice.StoreSchemaSubjectTopicId;
+import net.kenevans.utils.Configurations;
+
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Function;
@@ -264,14 +269,6 @@ public class ECGActivity extends AppCompatActivity
         setLastHr();
         mStopTime = new Date();
 
-//        // DEBUG
-//        SharedPreferences prefs = getPreferences(MODE_PRIVATE);
-//        Log.d(TAG, "All settings (getPreferences(MODE_PRIVATE)):\n"
-//                + Utils.getSharedPreferencesInfo("    ", prefs));
-//        prefs = PreferenceManager.getDefaultSharedPreferences(this);
-//        Log.d(TAG, "All settings (getDefaultSharedPreferences):\n"
-//                + Utils.getSharedPreferencesInfo("    ", prefs));
-
         // Start Bluetooth
         mDeviceId = mSharedPreferences.getString(PREF_DEVICE_ID, "");
         Log.d(TAG, "    mDeviceId=" + mDeviceId);
@@ -358,14 +355,16 @@ public class ECGActivity extends AppCompatActivity
         Log.d(TAG, "    mDeviceId=" + mDeviceId);
         Log.d(TAG, "    mApi=" + mApi);
         mDeviceId = mSharedPreferences.getString(PREF_DEVICE_ID, "");
-        if (mDeviceId.isEmpty()) {
-            Toast.makeText(this,
-                    getString(R.string.noDevice),
-                    Toast.LENGTH_SHORT).show();
+
+        // Store android_polar_ecg_ topic into shared preference to send streaming data
+        StoreSchemaSubjectTopicId.run(this, "android_polar_h10_ecg-key");
+        StoreSchemaSubjectTopicId.run(this, "android_polar_h10_ecg-value");
+
+        if (mDeviceId.isEmpty() && mTextViewInfo.getText().equals("")) {
+            Toast.makeText(this, getString(R.string.noDevice), Toast.LENGTH_SHORT).show();
         } else {
             restart();
         }
-//        Log.d(TAG, "    onResume(end) mPlaying=" + mPlaying);
     }
 
     @Override
@@ -408,6 +407,16 @@ public class ECGActivity extends AppCompatActivity
             if (mApi == null) {
                 return true;
             }
+
+            //Start activity to check whether Project information exist (SourceId, SubjectId, Project). If not, raise Toast to Scan QR
+            if (Configurations.getPreference(this,"patientName") == null ||
+                    Configurations.getPreference(this, "sourceID") == null ||
+                    Configurations.getPreference(this, "projectID") == null)
+            {
+                Toast.makeText(this, "Please scan QR code", Toast.LENGTH_LONG).show();
+                return true;
+            }
+
             if (mPlaying) {
                 // Turn it off
                 setLastHr();
@@ -493,6 +502,9 @@ public class ECGActivity extends AppCompatActivity
         return false;
     }
 
+    /**
+     * Scan QR code to get information and send to server
+     */
     private void scanQRCode() {
         Intent intent = new Intent(this, SimpleScannerActivity.class);
         startActivity(intent);
@@ -1204,14 +1216,16 @@ public class ECGActivity extends AppCompatActivity
                                         sensorSetting.maxSettings());
                             }).observeOn(AndroidSchedulers.mainThread())
                             .subscribe(polarEcgData -> {
-//                                        logTimestampInfo(polarEcgData);
+                                        logTimestampInfo(polarEcgData);
                                         if (mQRS == null) {
                                             mQRS = new QRSDetection(ECGActivity.this);
                                         }
 
                                         logEcgDataInfo(polarEcgData);
-                                        mQRS.process(polarEcgData);
-                                        String hR = mTextViewHR.getText().toString();
+                                        //plotting to diagram
+                                        String heartRate = mTextViewHR.getText().toString();
+                                        mQRS.process(this, polarEcgData, heartRate);
+
                                         // Update the elapsed time
                                         double elapsed =
                                                 mECGPlotter.getDataIndex() / 130.;
@@ -1340,32 +1354,7 @@ public class ECGActivity extends AppCompatActivity
                 + sdf1.format(date) + " (" + ts + ")");
     }
 
-    /**
-     * Determines if either COARSE or FINE location permission is granted.
-     *
-     * @return If granted.
-     */
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-//    public static boolean isAllPermissionsGranted(Context ctx) {
-//        boolean granted;
-//        if (Build.VERSION.SDK_INT >= 31) {
-//            // Android 12 (S)
-//            granted = ctx.checkSelfPermission(
-//                    Manifest.permission.BLUETOOTH_CONNECT) ==
-//                    PackageManager.PERMISSION_GRANTED |
-//                    ctx.checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) ==
-//                            PackageManager.PERMISSION_GRANTED;
-//        } else {
-//            // Android 6 (M)
-//            granted = ctx.checkSelfPermission(
-//                    Manifest.permission.ACCESS_COARSE_LOCATION) ==
-//                    PackageManager.PERMISSION_GRANTED |
-//                    ctx.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
-//                            PackageManager.PERMISSION_GRANTED;
-//        }
-//        return granted;
-//    }
-// ngay 1-11-2023
+
     public static boolean isAllPermissionsGranted(Context ctx) {
         boolean granted;
         if (Build.VERSION.SDK_INT >= 31) {
@@ -1558,6 +1547,7 @@ public class ECGActivity extends AppCompatActivity
     }
 
     public void restart() {
+
         Log.d(TAG, this.getClass().getSimpleName() + " restart:"
                 + " mApi=" + mApi
                 + " mDeviceId=" + mDeviceId);
@@ -1623,12 +1613,11 @@ public class ECGActivity extends AppCompatActivity
 
             @Override
             public void deviceConnecting(@NonNull PolarDeviceInfo polarDeviceInfo) {
-                showToast(polarDeviceInfo.toString());
+                showToast("Device connecting");
             }
 
             @Override
             public void deviceConnected(@NonNull PolarDeviceInfo s) {
-                Log.d(TAG, "*Device connected " + s.deviceId);
                 showToast(s.toString());
                 mAddress = s.address;
                 mName = s.name;
@@ -1725,11 +1714,11 @@ public class ECGActivity extends AppCompatActivity
     }
 
     /**
-     * Show toast on device
+     * Show toast on device with current context
      * @param message
      */
     private void showToast(String message) {
-        Toast toast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
+        Toast toast = Toast.makeText(this, message, Toast.LENGTH_LONG);
         toast.show();
     }
 
