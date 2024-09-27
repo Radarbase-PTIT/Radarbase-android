@@ -1,6 +1,6 @@
 package net.kenevans.polar.polarecg;
 
-interface IQRSConstants {
+public interface IQRSConstants {
     /**
      * Sampling rate. These algorithms are based on this particular sampling
      * rate.

@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.polar.sdk.api.model.PolarEcgData;
 
+import net.kenevans.apiservice.MockTrueService;
 import net.kenevans.apiservice.SendDataToKafKa;
 
 import java.util.ArrayList;
@@ -67,16 +68,19 @@ public class QRSDetection implements IConstants, IQRSConstants {
         mActivity = activity;
     }
 
-    public void process(Context ctx, PolarEcgData polarEcgData, String heartRate) {
-        // Update the ECG plot
-//        ecgPlotter().addValues(polarEcgData);
+    public void process(
+            Context ctx,
+            PolarEcgData polarEcgData,
+            int heartRate,
+            int measurementTimes,
+            int measurementCurrentState
+    ) {
 
-        // samples contains the ecgVals values in μV, mv = .001 * μV;
-        for (Integer val : polarEcgData.samples) {
-            double ecgVal = MICRO_TO_MILLI_VOLT * val;
-            SendDataToKafKa.run(ctx, "android_polar_h10_ecg", ecgVal);
+//        for (Integer i : polarEcgData.samples) {
+            SendDataToKafKa.run(ctx, "android_polar_h10_ecg", polarEcgData, heartRate, measurementTimes, measurementCurrentState, mActivity.mECGPlotter);
+//        MockTrueService.run(ctx, "android_polar_h10_ecg", polarEcgData, heartRate, measurementTimes, measurementCurrentState, mActivity.mECGPlotter);
 //            doAlgorithm(ecgVal);
-        }
+//        }
     }
 
     /**

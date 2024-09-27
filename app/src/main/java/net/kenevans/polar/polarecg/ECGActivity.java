@@ -109,6 +109,13 @@ public class ECGActivity extends AppCompatActivity
     public boolean mUseQRSPlot = false;
     public boolean mResetECGPlot = false;
 
+    //measure number of recording button clicked
+    public int measurementTimes = 0;
+    public int measurementCurrentState;
+    //Constant to define initial state value
+    public int MEASUREMENT_STATE_START = 1;
+    public int MEASUREMENT_STATE_END = 0;
+
     /***
      * Whether to save as CSV, Plot, or both.
      */
@@ -418,6 +425,8 @@ public class ECGActivity extends AppCompatActivity
             }
 
             if (mPlaying) {
+//                measurementTimes++;
+//                measurementCurrentState = MEASUREMENT_STATE_START;
                 // Turn it off
                 setLastHr();
                 mStopTime = new Date();
@@ -432,7 +441,10 @@ public class ECGActivity extends AppCompatActivity
                                 R.drawable.ic_play_arrow_white_36dp, null));
                 mMenu.findItem(R.id.pause).setTitle("Start");
                 mMenu.findItem(R.id.save).setVisible(true);
-            } else {
+            }
+
+            else {
+//                measurementCurrentState = MEASUREMENT_STATE_END;
                 // Turn it on
                 setLastHr();
                 mStopTime = new Date();
@@ -1223,8 +1235,8 @@ public class ECGActivity extends AppCompatActivity
 
                                         logEcgDataInfo(polarEcgData);
                                         //plotting to diagram
-                                        String heartRate = mTextViewHR.getText().toString();
-                                        mQRS.process(this, polarEcgData, heartRate);
+                                        int heartRate = Integer.parseInt(mTextViewHR.getText().toString());
+                                        mQRS.process(this, polarEcgData, heartRate, this.measurementTimes, this.measurementCurrentState);
 
                                         // Update the elapsed time
                                         double elapsed =
@@ -1685,7 +1697,6 @@ public class ECGActivity extends AppCompatActivity
             public void hrNotificationReceived(@NonNull String s,
                                                @NonNull PolarHrData polarHrData) {
                 if (mPlaying) {
-                    Log.d("HRRRRR", "*HR " + polarHrData.hr + " mPlaying=" + mPlaying);
                     mTextViewHR.setText(String.valueOf(polarHrData.hr));
                     // Add to HR plot
                     long time = new Date().getTime();
