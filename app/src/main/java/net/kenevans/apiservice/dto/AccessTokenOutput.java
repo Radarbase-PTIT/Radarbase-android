@@ -1,4 +1,4 @@
-package net.kenevans.baseapi.dto;
+package net.kenevans.apiservice.dto;
 
 
 public class AccessTokenOutput {

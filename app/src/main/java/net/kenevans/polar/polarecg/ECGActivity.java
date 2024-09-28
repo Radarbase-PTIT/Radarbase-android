@@ -54,12 +54,14 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -72,6 +74,7 @@ import androidx.preference.PreferenceManager;
 
 import net.kenevans.apiservice.SendDataToKafKa;
 import net.kenevans.apiservice.StoreSchemaSubjectTopicId;
+import net.kenevans.apiservice.callbacks.IResponseCallback;
 import net.kenevans.utils.Configurations;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -110,11 +113,9 @@ public class ECGActivity extends AppCompatActivity
     public boolean mResetECGPlot = false;
 
     //measure number of recording button clicked
-    public int measurementTimes = 0;
-    public int measurementCurrentState;
-    //Constant to define initial state value
-    public int MEASUREMENT_STATE_START = 1;
-    public int MEASUREMENT_STATE_END = 0;
+    public HashMap<String, Integer> measurementTimes = new HashMap<>();
+    public List<Integer> heartRates = new ArrayList<>();
+
 
     /***
      * Whether to save as CSV, Plot, or both.
@@ -288,7 +289,7 @@ public class ECGActivity extends AppCompatActivity
             mMruDevices = new ArrayList<>();
         }
 
-        if (mDeviceId == null || mDeviceId.equals("")) {
+        if (mDeviceId == null || mDeviceId.isEmpty()) {
             selectDeviceId();
         }
 
@@ -424,9 +425,8 @@ public class ECGActivity extends AppCompatActivity
                 return true;
             }
 
+            //start pausing
             if (mPlaying) {
-//                measurementTimes++;
-//                measurementCurrentState = MEASUREMENT_STATE_START;
                 // Turn it off
                 setLastHr();
                 mStopTime = new Date();
@@ -443,8 +443,17 @@ public class ECGActivity extends AppCompatActivity
                 mMenu.findItem(R.id.save).setVisible(true);
             }
 
+            //start playing
             else {
-//                measurementCurrentState = MEASUREMENT_STATE_END;
+                String patientName = Configurations.getPreference(this, Configurations.PATIENT_NAME);
+                if (patientName != null) {
+                    if (measurementTimes.containsKey(patientName)) {
+                        measurementTimes.put(patientName, measurementTimes.get(patientName).intValue() + 1);
+                    } else {
+                        measurementTimes.put(patientName, 1);
+                    }
+                }
+
                 // Turn it on
                 setLastHr();
                 mStopTime = new Date();
@@ -1210,40 +1219,44 @@ public class ECGActivity extends AppCompatActivity
         }
 //        logEpochInfo("UTC");
         if (mEcgDisposable == null) {
-            // Set the local time to get correct timestamps. H10 apparently
-            // resets its time to 01:01:2019 00:00:00 when connected to strap
-            TimeZone timeZone = TimeZone.getTimeZone("UTC");
+            //Get current timezone + 7 (VN time)
+            TimeZone timeZone = TimeZone.getDefault();
             Calendar calNow = Calendar.getInstance(timeZone);
+            calNow.add(Calendar.HOUR_OF_DAY, 7);
             mApi.setLocalTime(mDeviceId, calNow);
             mEcgDisposable =
                     mApi.setLocalTime(mDeviceId, calNow)
-                            .andThen(
-                                    mApi.requestStreamSettings(mDeviceId,
-                                            PolarBleApi.DeviceStreamingFeature.ECG))
+                            .andThen(mApi.requestStreamSettings(mDeviceId, PolarBleApi.DeviceStreamingFeature.ECG))
                             .toFlowable()
                             .flatMap((Function<PolarSensorSetting,
                                     Publisher<PolarEcgData>>) sensorSetting -> {
 //                                logSensorSettings(sensorSetting);
                                 return mApi.startEcgStreaming(mDeviceId,
                                         sensorSetting.maxSettings());
-                            }).observeOn(AndroidSchedulers.mainThread())
+                            })
+                            .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(polarEcgData -> {
-                                        logTimestampInfo(polarEcgData);
+
                                         if (mQRS == null) {
                                             mQRS = new QRSDetection(ECGActivity.this);
                                         }
 
-                                        logEcgDataInfo(polarEcgData);
-                                        //plotting to diagram
-                                        int heartRate = Integer.parseInt(mTextViewHR.getText().toString());
-                                        mQRS.process(this, polarEcgData, heartRate, this.measurementTimes, this.measurementCurrentState);
+                                        boolean b = mTextViewHR.getText() == null || mTextViewHR.toString().isEmpty() ?
+                                                heartRates.add(0) :
+                                                heartRates.add(Integer.parseInt(mTextViewHR.getText().toString()));
 
-                                        // Update the elapsed time
-                                        double elapsed =
-                                                mECGPlotter.getDataIndex() / 130.;
-                                        mTextViewTime.setText(getString(R.string.elapsed_time, elapsed));
+//                                        for (PolarEcgData polarEcgData : po) {
+                                        mQRS.process(this,
+                                                polarEcgData,
+                                                heartRates,
+                                                measurementTimes.get(Configurations.getPreference(this, Configurations.PATIENT_NAME)).intValue(),
+                                                () -> {
+                                                    mECGPlotter.addValues(polarEcgData);
+                                                    double elapsed = mECGPlotter.getDataIndex() / IQRSConstants.FS;
+                                                    mTextViewTime.setText(getString(R.string.elapsed_time, elapsed));
+                                                }
+                                        );
 
-                                        //Send all data to kafka
                                     },
                                     throwable -> {
                                         Log.e(TAG,

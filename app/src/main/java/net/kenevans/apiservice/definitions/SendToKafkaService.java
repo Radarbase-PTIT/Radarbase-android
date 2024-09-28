@@ -1,15 +1,13 @@
-package net.kenevans.baseapi.definitions;
+package net.kenevans.apiservice.definitions;
 
-import net.kenevans.baseapi.dto.KafkaDataResponse;
-import net.kenevans.baseapi.requests.PolarH10ECG;
-import net.kenevans.utils.Configurations;
+import net.kenevans.apiservice.dto.KafkaDataResponse;
+import net.kenevans.apiservice.requests.PolarH10ECG;
 
 import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.HeaderMap;
-import retrofit2.http.Headers;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 

@@ -2,15 +2,14 @@ package net.kenevans.apiservice;
 
 
 import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
 import net.kenevans.baseapi.RetrofitInstanceWithBaseUrl;
-import net.kenevans.baseapi.definitions.RefreshTokenService;
-import net.kenevans.baseapi.dto.Auth;
+import net.kenevans.apiservice.definitions.RefreshTokenService;
+import net.kenevans.apiservice.dto.Auth;
 import net.kenevans.polar.polarecg.ECGActivity;
 import net.kenevans.utils.ActivityHandling;
 

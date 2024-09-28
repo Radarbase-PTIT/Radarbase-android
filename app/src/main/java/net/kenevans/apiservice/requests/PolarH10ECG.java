@@ -1,6 +1,6 @@
-package net.kenevans.baseapi.requests;
+package net.kenevans.apiservice.requests;
 
-import net.kenevans.baseapi.requests.polarh10ecg.RecordData;
+import net.kenevans.apiservice.requests.polarh10ecg.RecordData;
 
 public class PolarH10ECG
 {

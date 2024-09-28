@@ -11,8 +11,8 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
 import net.kenevans.baseapi.RetrofitInstanceWithBaseUrl;
-import net.kenevans.baseapi.definitions.AccessTokenService;
-import net.kenevans.baseapi.dto.AccessTokenOutput;
+import net.kenevans.apiservice.definitions.AccessTokenService;
+import net.kenevans.apiservice.dto.AccessTokenOutput;
 import net.kenevans.polar.polarecg.ECGActivity;
 import net.kenevans.utils.Configurations;
 

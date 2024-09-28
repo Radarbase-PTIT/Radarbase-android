@@ -1,4 +1,4 @@
-package net.kenevans.baseapi.requests.polarh10ecg;
+package net.kenevans.apiservice.requests.polarh10ecg;
 
 
 import java.util.HashMap;

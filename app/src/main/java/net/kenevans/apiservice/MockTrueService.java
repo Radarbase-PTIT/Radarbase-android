@@ -6,7 +6,7 @@ import android.util.Log;
 import com.polar.sdk.api.model.PolarEcgData;
 
 import net.kenevans.baseapi.RetrofitMockInstanceWithBaseUrl;
-import net.kenevans.baseapi.definitions.MockService;
+import net.kenevans.apiservice.definitions.MockService;
 import net.kenevans.polar.polarecg.ECGPlotter;
 import net.kenevans.polar.polarecg.IQRSConstants;
 import net.kenevans.utils.Configurations;
@@ -29,7 +29,7 @@ public class MockTrueService {
         String patientName = Configurations.getPreference(ctx, Configurations.PATIENT_NAME);
         String accessToken = Configurations.getPreference(ctx, Configurations.ACCESS_TOKEN);
 
-
+        ecgPlotter.addValues(ecgData);
         RetrofitMockInstanceWithBaseUrl<MockService> instance = new RetrofitMockInstanceWithBaseUrl<>(MockService.class);
         for (Integer values : ecgData.samples) {
             HashMap<String, String> body = new HashMap<>();

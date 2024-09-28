@@ -1,6 +1,6 @@
-package net.kenevans.baseapi.definitions;
+package net.kenevans.apiservice.definitions;
 
-import net.kenevans.baseapi.dto.Auth;
+import net.kenevans.apiservice.dto.Auth;
 
 import retrofit2.Call;
 import retrofit2.http.GET;

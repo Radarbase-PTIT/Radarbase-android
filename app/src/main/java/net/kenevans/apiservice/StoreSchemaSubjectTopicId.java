@@ -5,8 +5,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import net.kenevans.baseapi.RetrofitInstanceWithBaseUrl;
-import net.kenevans.baseapi.definitions.SchemaSubjectTopicService;
-import net.kenevans.baseapi.dto.SchemaSubject;
+import net.kenevans.apiservice.definitions.SchemaSubjectTopicService;
+import net.kenevans.apiservice.dto.SchemaSubject;
 import net.kenevans.utils.Configurations;
 
 import retrofit2.Call;
