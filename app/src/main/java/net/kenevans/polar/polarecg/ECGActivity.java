@@ -61,7 +61,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -74,7 +73,6 @@ import androidx.preference.PreferenceManager;
 
 import net.kenevans.apiservice.SendDataToKafKa;
 import net.kenevans.apiservice.StoreSchemaSubjectTopicId;
-import net.kenevans.apiservice.callbacks.IResponseCallback;
 import net.kenevans.utils.Configurations;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -433,7 +431,11 @@ public class ECGActivity extends AppCompatActivity
                 mStopTime = new Date();
                 mPlaying = false;
                 setPanBehavior();
-                streamECG();
+                // send any unsent data
+                sendDataToKafKa.send(this,"android_polar_h10_ecg", measurementTimes.get(Configurations.getPreference(this, Configurations.PATIENT_NAME)).intValue());
+                if (mEcgDisposable != null) {
+                    streamECG();
+                }
                 mMenu.findItem(R.id.pause).setIcon(ResourcesCompat.
                         getDrawable(getResources(),
                                 R.drawable.ic_play_arrow_white_36dp, null));
@@ -804,7 +806,7 @@ public class ECGActivity extends AppCompatActivity
             mMruDevices.remove(deviceInfo1);
         }
         // Remove at end if size exceed max
-        if (mMruDevices.size() != 0 && mMruDevices.size() == MAX_DEVICES) {
+        if (!mMruDevices.isEmpty() && mMruDevices.size() == MAX_DEVICES) {
             mMruDevices.remove(mMruDevices.size() - 1);
         }
         // Add at the beginning
@@ -1216,6 +1218,7 @@ public class ECGActivity extends AppCompatActivity
             return;
         }
 //        logEpochInfo("UTC");
+        if (mEcgDisposable == null) {
             //Get current timezone + 7 (VN time)
             TimeZone timeZone = TimeZone.getDefault();
             Calendar calNow = Calendar.getInstance(timeZone);
@@ -1256,8 +1259,7 @@ public class ECGActivity extends AppCompatActivity
                                     },
                                     () -> Log.d(TAG, "ECG streaming complete")
                             );
-        //if stop playing
-        if (!mPlaying) {
+        } else {
             // NOTE stops streaming if it is "running"
             mEcgDisposable.dispose();
             mEcgDisposable = null;

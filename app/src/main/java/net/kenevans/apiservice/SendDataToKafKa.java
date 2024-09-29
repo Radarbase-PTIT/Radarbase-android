@@ -56,34 +56,32 @@ public class SendDataToKafKa
         //Update UI
         responseCallback.onSuccess();
 
+        sendCount += polarEcgData.samples.size();
+
         for (Integer value : polarEcgData.samples) {
-            // if pause recording ecg, send remaining ecg data and heartRates
-            if (!playing) {
-                sendDataToKafka(ctx, topic, ecgData, heartRates, measurementTimes);
-            }
             //if recording, send samples per 5 seconds each = 73
-            else {
-                if (ecgData.size() == 5 * 73) {
-                    //send data
-                    sendDataToKafka(ctx, topic, ecgData, heartRates, measurementTimes);
-                    this.ecgData = this.ecgData.subList(5*73, this.ecgData.size());
-                    this.heartRates = this.heartRates.subList(5*73,this.heartRates.size());
-                } else {
-                    ecgData.add(value * IQRSConstants.MICRO_TO_MILLI_VOLT);
-                    heartRates.add(heartRate);
-                }
+            if (ecgData.size() == 5 * 73) {
+                //send data
+                send(ctx, topic, measurementTimes);
+                this.ecgData = this.ecgData.subList(5 * 73, this.ecgData.size());
+                this.heartRates = this.heartRates.subList(5 * 73, this.heartRates.size());
+            } else {
+                ecgData.add(value * IQRSConstants.MICRO_TO_MILLI_VOLT);
+                heartRates.add(heartRate);
             }
+        }
+
+        if (!playing) {
+
         }
     }
 
     /**
      * Send data to kafka
      * @param ctx
-     * @param ecg
-     * @param heartRates
      * @param measurementTimes
      */
-    private void sendDataToKafka(Context ctx, String topic, List<Double> ecg, List<Integer> heartRates, int measurementTimes) {
+    public void send(Context ctx, String topic, int measurementTimes) {
         int keySchemaId = Integer.parseInt(Configurations.getPreference(ctx, Configurations.ANDROID_POLAR_H10_ECG_KEY));
         int valueSchemaId = Integer.parseInt(Configurations.getPreference(ctx, Configurations.ANDROID_POLAR_H10_ECG_VALUE));
         String projectId = Configurations.getPreference(ctx, Configurations.PROJECT_ID);
@@ -94,7 +92,7 @@ public class SendDataToKafKa
         RecordData[] recordData = new RecordData[] {
                 new RecordData(
                         new RecordKeyData(projectId, sourceId, patientName),
-                        new RecordValueData(ecg,heartRates,measurementTimes)
+                        new RecordValueData(this.ecgData,this.heartRates,measurementTimes)
                 )
         };
 
