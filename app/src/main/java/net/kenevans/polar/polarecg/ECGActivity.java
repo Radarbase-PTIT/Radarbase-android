@@ -114,7 +114,6 @@ public class ECGActivity extends AppCompatActivity
     public HashMap<String, Integer> measurementTimes = new HashMap<>();
     private SendDataToKafKa sendDataToKafKa;
 
-
     /***
      * Whether to save as CSV, Plot, or both.
      */
@@ -432,7 +431,7 @@ public class ECGActivity extends AppCompatActivity
                 mPlaying = false;
                 setPanBehavior();
                 // send any unsent data
-                sendDataToKafKa.send(this,"android_polar_h10_ecg", measurementTimes.get(Configurations.getPreference(this, Configurations.PATIENT_NAME)).intValue());
+                sendDataToKafKa.send(this,IConstants.KAFKA_TOPIC_POLAR_H10, measurementTimes.get(Configurations.getPreference(this, Configurations.PATIENT_NAME)).intValue());
                 if (mEcgDisposable != null) {
                     streamECG();
                 }
@@ -1238,10 +1237,10 @@ public class ECGActivity extends AppCompatActivity
                                         if (mQRS == null) {
                                             mQRS = new QRSDetection(ECGActivity.this);
                                         }
-
                                         sendDataToKafKa.run(this,
-                                                "android_polar_h10_ecg",
+                                                IConstants.KAFKA_TOPIC_POLAR_H10,
                                                 polarEcgData,
+                                                Configurations.getPreference(this, Configurations.PATIENT_NAME),
                                                 measurementTimes.get(Configurations.getPreference(this, Configurations.PATIENT_NAME)).intValue(),
                                                 Integer.parseInt(mTextViewHR.getText().toString()),
                                                 () -> {

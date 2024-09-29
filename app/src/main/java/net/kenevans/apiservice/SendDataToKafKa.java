@@ -16,6 +16,7 @@ import net.kenevans.apiservice.requests.PolarH10ECG;
 import net.kenevans.apiservice.requests.polarh10ecg.RecordData;
 import net.kenevans.apiservice.requests.polarh10ecg.RecordKeyData;
 import net.kenevans.apiservice.requests.polarh10ecg.RecordValueData;
+import net.kenevans.polar.polarecg.IConstants;
 import net.kenevans.polar.polarecg.IQRSConstants;
 import net.kenevans.utils.Configurations;
 
@@ -23,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -30,22 +32,27 @@ import retrofit2.Response;
 
 public class SendDataToKafKa
 {
+    private String userId;
     private int sendCount;
     private List<Integer> heartRates;
     private List<Double> ecgData;
     private final RetrofitInstanceWithBaseUrl<SendToKafkaService> instance;
+    private int measurementTimes;
 
     public SendDataToKafKa() {
         this.instance = new RetrofitInstanceWithBaseUrl<>(SendToKafkaService.class);
         this.heartRates = new ArrayList<>();
         this.ecgData = new ArrayList<>();
         this.sendCount = 0;
+        this.measurementTimes = 0;
+        this.userId = "";
     }
 
     public void run(
             Context ctx,
             String topic,
             PolarEcgData polarEcgData,
+            String userId,
             int measurementTimes,
             int heartRate,
             IResponseCallback responseCallback
@@ -54,15 +61,24 @@ public class SendDataToKafKa
         //Update UI
         responseCallback.onSuccess();
 
+        //for logging number of record stored to check correctness
         sendCount += polarEcgData.samples.size();
+
+        // When measuring nth times and current user is different to previous user using the same phone
+        if (measurementTimes != this.measurementTimes || !Objects.equals(userId, this.userId)) {
+            this.heartRates = new ArrayList<>();
+            this.ecgData = new ArrayList<>();
+            this.measurementTimes = measurementTimes;
+            this.userId = userId;
+        }
 
         for (Integer value : polarEcgData.samples) {
             //if recording, send samples per 5 seconds each = 73
-            if (ecgData.size() == 5 * 73) {
+            if (ecgData.size() == IConstants.KAFKA_TOPIC_POLAR_H10_SENT_INTERVAL * 73) {
                 //send data
                 send(ctx, topic, measurementTimes);
-                this.ecgData = this.ecgData.subList(5 * 73, this.ecgData.size());
-                this.heartRates = this.heartRates.subList(5 * 73, this.heartRates.size());
+                this.ecgData = this.ecgData.subList(IConstants.KAFKA_TOPIC_POLAR_H10_SENT_INTERVAL * 73, this.ecgData.size());
+                this.heartRates = this.heartRates.subList(IConstants.KAFKA_TOPIC_POLAR_H10_SENT_INTERVAL * 73, this.heartRates.size());
             } else {
                 ecgData.add(value * IQRSConstants.MICRO_TO_MILLI_VOLT);
                 heartRates.add(heartRate);
@@ -96,15 +112,16 @@ public class SendDataToKafKa
         headers.put("Authorization", "Bearer " + accessToken);
         headers.put("Content-Type", "application/vnd.kafka.avro.v2+json");
         headers.put("Accept", "application/json");
-        instance.getApiService().sendData(topic, headers, data).enqueue(new Callback<KafkaDataResponse>() {
+
+        instance.getApiService().sendData(topic, headers, data).enqueue(new Callback<KafkaDataResponse>()
+        {
             @Override
             public void onResponse(@NonNull Call<KafkaDataResponse> call, @NonNull Response<KafkaDataResponse> response) {
                 if (response.code() >= 400) {
                     Toast.makeText(ctx, "Access token expired. Rescan QR code", Toast.LENGTH_LONG).show();
                 }
                 if (response.isSuccessful()) {
-                    Log.d("Success","Data sent: " + sendCount);
-                    sendCount+=1;
+                    Log.d("Success", "Data sent: " + sendCount);
                 }
             }
 

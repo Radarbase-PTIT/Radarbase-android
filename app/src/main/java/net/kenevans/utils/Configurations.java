@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 import androidx.preference.PreferenceManager;
 
 import java.util.Map;
-import java.util.Objects;
 
 public class Configurations {
 

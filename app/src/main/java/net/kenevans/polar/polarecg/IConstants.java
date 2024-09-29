@@ -25,6 +25,9 @@ public interface IConstants {
     String PREF_PATIENT_NAME = "patientName";
     String PREF_QRS_VISIBILITY = "qrsVisibility";
 
+    String KAFKA_TOPIC_POLAR_H10 = "android_polar_h10_ecg";
+    int KAFKA_TOPIC_POLAR_H10_SENT_INTERVAL = 8; // 8 seconds
+
     int REQ_ACCESS_PERMISSIONS = 1;
     int REQ_SETTINGS = 15;
 //    int REQ_ENABLE_BLUETOOTH = 2;
