@@ -114,7 +114,7 @@ public class ECGActivity extends AppCompatActivity
 
     //measure number of recording button clicked
     public HashMap<String, Integer> measurementTimes = new HashMap<>();
-    public List<Integer> heartRates = new ArrayList<>();
+    private SendDataToKafKa sendDataToKafKa;
 
 
     /***
@@ -276,6 +276,7 @@ public class ECGActivity extends AppCompatActivity
 
         setLastHr();
         mStopTime = new Date();
+        sendDataToKafKa = new SendDataToKafKa();
 
         // Start Bluetooth
         mDeviceId = mSharedPreferences.getString(PREF_DEVICE_ID, "");
@@ -432,10 +433,7 @@ public class ECGActivity extends AppCompatActivity
                 mStopTime = new Date();
                 mPlaying = false;
                 setPanBehavior();
-                if (mEcgDisposable != null) {
-                    // Turns it off
-                    streamECG();
-                }
+                streamECG();
                 mMenu.findItem(R.id.pause).setIcon(ResourcesCompat.
                         getDrawable(getResources(),
                                 R.drawable.ic_play_arrow_white_36dp, null));
@@ -1218,14 +1216,11 @@ public class ECGActivity extends AppCompatActivity
             return;
         }
 //        logEpochInfo("UTC");
-        if (mEcgDisposable == null) {
             //Get current timezone + 7 (VN time)
             TimeZone timeZone = TimeZone.getDefault();
             Calendar calNow = Calendar.getInstance(timeZone);
             calNow.add(Calendar.HOUR_OF_DAY, 7);
-            mApi.setLocalTime(mDeviceId, calNow);
-            mEcgDisposable =
-                    mApi.setLocalTime(mDeviceId, calNow)
+            mEcgDisposable = mApi.setLocalTime(mDeviceId, calNow)
                             .andThen(mApi.requestStreamSettings(mDeviceId, PolarBleApi.DeviceStreamingFeature.ECG))
                             .toFlowable()
                             .flatMap((Function<PolarSensorSetting,
@@ -1241,36 +1236,28 @@ public class ECGActivity extends AppCompatActivity
                                             mQRS = new QRSDetection(ECGActivity.this);
                                         }
 
-                                        boolean b = mTextViewHR.getText() == null || mTextViewHR.toString().isEmpty() ?
-                                                heartRates.add(0) :
-                                                heartRates.add(Integer.parseInt(mTextViewHR.getText().toString()));
-
-//                                        for (PolarEcgData polarEcgData : po) {
-                                        mQRS.process(this,
+                                        sendDataToKafKa.run(this,
+                                                "android_polar_h10_ecg",
                                                 polarEcgData,
-                                                heartRates,
                                                 measurementTimes.get(Configurations.getPreference(this, Configurations.PATIENT_NAME)).intValue(),
+                                                Integer.parseInt(mTextViewHR.getText().toString()),
+                                                mPlaying,
                                                 () -> {
                                                     mECGPlotter.addValues(polarEcgData);
                                                     double elapsed = mECGPlotter.getDataIndex() / IQRSConstants.FS;
                                                     mTextViewTime.setText(getString(R.string.elapsed_time, elapsed));
                                                 }
                                         );
-
                                     },
                                     throwable -> {
-                                        Log.e(TAG,
-                                                "ECG Error: "
-                                                        + throwable.getLocalizedMessage(),
-                                                throwable);
-                                        Utils.excMsg(ECGActivity.this, "ECG " +
-                                                        "Error: ",
-                                                throwable);
+                                        Log.e(TAG,"ECG Error: " + throwable.getLocalizedMessage(), throwable);
+                                        Utils.excMsg(ECGActivity.this, "ECG " + "Error: ", throwable);
                                         mEcgDisposable = null;
                                     },
                                     () -> Log.d(TAG, "ECG streaming complete")
                             );
-        } else {
+        //if stop playing
+        if (!mPlaying) {
             // NOTE stops streaming if it is "running"
             mEcgDisposable.dispose();
             mEcgDisposable = null;

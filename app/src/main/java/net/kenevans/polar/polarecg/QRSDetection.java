@@ -70,19 +70,6 @@ public class QRSDetection implements IConstants, IQRSConstants {
         mActivity = activity;
     }
 
-    public void process(
-            Context ctx,
-            PolarEcgData polarEcgData,
-            List<Integer> heartRates,
-            int measurementTimes,
-            IResponseCallback responseCallback
-    ) {
-
-            SendDataToKafKa.run(ctx, "android_polar_h10_ecg", polarEcgData, heartRates, measurementTimes, responseCallback);
-//          MockTrueService.run(ctx, "android_polar_h10_ecg", polarEcgData, heartRate, measurementTimes, measurementCurrentState, mActivity.mECGPlotter);
-//            doAlgorithm(ecgVal);
-//        }
-    }
 
     /**
      * Runs the QRS detection algorithm on the given ECG value.

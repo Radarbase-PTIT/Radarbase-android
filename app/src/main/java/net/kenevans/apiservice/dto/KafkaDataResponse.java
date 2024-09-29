@@ -1,21 +1,23 @@
 package net.kenevans.apiservice.dto;
 
+import net.kenevans.apiservice.dto.kafkaresponse.Offsets;
+
 public class KafkaDataResponse {
-    private String[] offsets;
+    private Offsets[] offsets;
 
-    private int keySchemaId;
+    private int key_schema_id;
 
-    private int valueSchemaId;
+    private int value_schema_id;
 
-    public String[] getOffsets() {
+    public Offsets[] getOffsets() {
         return offsets;
     }
 
     public int getKeySchemaId() {
-        return this.keySchemaId;
+        return this.key_schema_id;
     }
 
     public int getValueSchemaId() {
-        return this.valueSchemaId;
+        return this.value_schema_id;
     }
 }
