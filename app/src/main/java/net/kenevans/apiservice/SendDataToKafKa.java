@@ -16,7 +16,6 @@ import net.kenevans.apiservice.requests.PolarH10ECG;
 import net.kenevans.apiservice.requests.polarh10ecg.RecordData;
 import net.kenevans.apiservice.requests.polarh10ecg.RecordKeyData;
 import net.kenevans.apiservice.requests.polarh10ecg.RecordValueData;
-import net.kenevans.polar.polarecg.ECGPlotter;
 import net.kenevans.polar.polarecg.IQRSConstants;
 import net.kenevans.utils.Configurations;
 
@@ -49,7 +48,6 @@ public class SendDataToKafKa
             PolarEcgData polarEcgData,
             int measurementTimes,
             int heartRate,
-            boolean playing,
             IResponseCallback responseCallback
     ) {
 
@@ -69,10 +67,6 @@ public class SendDataToKafKa
                 ecgData.add(value * IQRSConstants.MICRO_TO_MILLI_VOLT);
                 heartRates.add(heartRate);
             }
-        }
-
-        if (!playing) {
-
         }
     }
 

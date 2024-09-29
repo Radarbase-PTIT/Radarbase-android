@@ -1244,7 +1244,6 @@ public class ECGActivity extends AppCompatActivity
                                                 polarEcgData,
                                                 measurementTimes.get(Configurations.getPreference(this, Configurations.PATIENT_NAME)).intValue(),
                                                 Integer.parseInt(mTextViewHR.getText().toString()),
-                                                mPlaying,
                                                 () -> {
                                                     mECGPlotter.addValues(polarEcgData);
                                                     double elapsed = mECGPlotter.getDataIndex() / IQRSConstants.FS;

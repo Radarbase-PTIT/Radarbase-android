@@ -1,15 +1,5 @@
 package net.kenevans.polar.polarecg;
 
-import android.content.Context;
-import android.util.Log;
-import android.widget.TextView;
-
-import com.polar.sdk.api.model.PolarEcgData;
-
-import net.kenevans.apiservice.MockTrueService;
-import net.kenevans.apiservice.SendDataToKafKa;
-import net.kenevans.apiservice.callbacks.IResponseCallback;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
