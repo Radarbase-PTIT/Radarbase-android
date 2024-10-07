@@ -19,9 +19,13 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.zxing.Result;
 
 import net.kenevans.apiservice.GetRefreshToken;
+import net.kenevans.utils.Configurations;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
@@ -64,6 +68,15 @@ public class SimpleScannerActivity extends AppCompatActivity implements ZXingSca
     public void handleResult(Result rawResult) {
         // Do something with the result here
         String radarbaseUrl = rawResult.getText();
+        //extract host from radarbase url
+        try {
+            URL url = new URL(radarbaseUrl);
+            String host = url.getHost();
+            Configurations.updatePreference(this, Configurations.HOST, host);
+            Configurations.updatePreference(this, Configurations.SCHEME, url.getProtocol());
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
         String[] urlFragments = radarbaseUrl.split("/");
         String tokenName = urlFragments[urlFragments.length - 1];
         GetRefreshToken.run(this, tokenName);

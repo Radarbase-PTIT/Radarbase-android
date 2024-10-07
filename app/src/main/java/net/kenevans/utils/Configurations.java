@@ -9,6 +9,8 @@ import java.util.Map;
 
 public class Configurations {
 
+    public static final String SCHEME = "scheme";
+    public static final String HOST = "host";
     public static final String PROJECT_ID = "projectID";
     public static final String SOURCE_ID = "sourceID";
     public static final String PATIENT_NAME = "patientName";

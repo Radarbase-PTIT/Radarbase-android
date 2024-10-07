@@ -88,8 +88,8 @@ public class SendDataToKafKa
 
     /**
      * Send data to kafka
-     * @param ctx
-     * @param measurementTimes
+     * @param ctx: Current context
+     * @param measurementTimes: Number of times an ECG is measured.
      */
     public void send(Context ctx, String topic, int measurementTimes) {
         int keySchemaId = Integer.parseInt(Configurations.getPreference(ctx, Configurations.ANDROID_POLAR_H10_ECG_KEY));
@@ -126,7 +126,7 @@ public class SendDataToKafKa
             }
 
             @Override
-            public void onFailure(Call<KafkaDataResponse> call, Throwable t) {
+            public void onFailure(@NonNull Call<KafkaDataResponse> call, @NonNull  Throwable t) {
                 Log.e("Failure", t.getMessage());
             }
         });

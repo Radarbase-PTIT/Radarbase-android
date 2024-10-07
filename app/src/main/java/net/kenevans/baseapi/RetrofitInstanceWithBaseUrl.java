@@ -2,6 +2,9 @@ package net.kenevans.baseapi;
 
 import android.util.Log;
 
+import net.kenevans.polar.polarecg.ECGActivity;
+import net.kenevans.utils.Configurations;
+
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
@@ -18,13 +21,16 @@ public class RetrofitInstanceWithBaseUrl<T> {
         HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
+        String host = Configurations.getPreference(new ECGActivity(), Configurations.HOST);
+        String scheme = Configurations.getPreference(new ECGActivity(), Configurations.SCHEME);
+
 // Add the interceptor to the OkHttpClient
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .addInterceptor(loggingInterceptor)
                 .build();
 
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.1.109/") // API Base URL
+                .baseUrl(scheme+"://"+host+"/") // API Base URL
                 .client(okHttpClient)
                 .addConverterFactory(GsonConverterFactory.create()) // JSON Converter
                 .build();
